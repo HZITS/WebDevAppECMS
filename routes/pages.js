@@ -16,9 +16,7 @@ router.get('/', function (req, res) {
 
         res.render('index', {
             title: page.title,
-            content: page.content,
-            ans: " ",
-            c: " "
+            content: page.content
         });
     });
 });

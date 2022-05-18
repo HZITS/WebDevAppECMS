@@ -130,17 +130,17 @@ app.use(function (req, res, next) {
   next();
 });
 
-// // passport config
-// require('./config/passport')(passport);
-// // Passport Middleware
-// app.use(passport.initialize());
-// app.use(passport.session());
-//
-// app.get('*', function(req,res,next) {
-//   res.locals.cart = req.session.cart;
-//   res.locals.user = req.user || null;
-//   next();
-// });
+// passport config
+require('./config/passport')(passport);
+// Passport Middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('*', function(req,res,next) {
+  res.locals.cart = req.session.cart;
+  res.locals.user = req.user || null;
+  next();
+});
 
 // setting routes
 var pages = require('./routes/pages.js');
