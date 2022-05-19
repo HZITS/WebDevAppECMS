@@ -56,7 +56,7 @@ router.get('/add-product', function (req, res) {
  */
 router.post('/add-product', function (req, res) {
 
-    let imageFile = typeof req.files.image !== "undefined" ? req.files.image.name : " ";
+    let imageFile = typeof req.files.image !== "undefined" ? req.files.image.name : "";
 
     req.checkBody('title', 'Title must have a value.').notEmpty();
     req.checkBody('desc', 'Description must have a value.').notEmpty();

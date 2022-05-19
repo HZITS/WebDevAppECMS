@@ -106,7 +106,7 @@ app.use(expressValidator({
   },
   customValidators: {
     isImage: function (value, filename) {
-      var extension = (path.extname(filename)).toLowerCase();
+      let extension = (path.extname(filename)).toLowerCase();
       switch (extension) {
         case '.jpg':
           return '.jpg';
