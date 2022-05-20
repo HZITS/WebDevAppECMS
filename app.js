@@ -18,11 +18,12 @@ var config = require('./config/database.js');
 var app = express();
 
 // connect to db
-mongoose.connect(config.database);
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error'));
-db.once('open', function () {
-  console.log('Connected to MongoDB');
+mongoose.Promise = global.Promise;
+mongoose.connect(config.database).then(() => {
+  console.log("Database Connected Successfully!!");
+}).catch(err => {
+  console.log('Could not connect to the database', err);
+  process.exit();
 });
 
 // view engine setup
