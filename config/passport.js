@@ -1,5 +1,5 @@
 var LocalStrategy = require('passport-local').Strategy;
-var User = require('C:\\Users\\mapol\\WebstormProjects\\untitled2\\models\\user.js');
+var User = require('../models/user');
 var bcrypt = require('bcryptjs');
 
 module.exports = function (passport) {

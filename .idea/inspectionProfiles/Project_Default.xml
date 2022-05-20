@@ -6,5 +6,6 @@
         <language minSize="539" name="JavaScript" />
       </Languages>
     </inspection_tool>
+    <inspection_tool class="JSDeprecatedSymbols" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
   </profile>
 </component>

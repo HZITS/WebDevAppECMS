@@ -2,7 +2,7 @@ let express = require('express');
 let router = express.Router();
 let fs = require('fs-extra');
 let auth = require('../config/auth');
-let isUser = auth.isUser;
+// let isUser = auth.isUser;
 
 // Get Product model
 let Product = require('../models/product');

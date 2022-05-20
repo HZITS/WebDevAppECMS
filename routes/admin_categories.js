@@ -1,14 +1,16 @@
 let express = require('express');
 let router = express.Router();
 let auth = require('../config/auth');
+let isAdmin = auth.isAdmin;
 
 // GET category model
 let Category = require('../models/category')
+const Page = require("../models/page");
 
 /*
  * GET category index
  */
-router.get('/', function (req, res) {
+router.get('/', isAdmin, function (req, res) {
     Category.find(function (err, categories) {
         if (err) return console.log(err);
         res.render('admin/categories', {
@@ -20,7 +22,7 @@ router.get('/', function (req, res) {
 /*
  * GET add category
  */
-router.get('/add-category', function (req, res) {
+router.get('/add-category', isAdmin, function (req, res) {
     let title = "";
 
     res.render('admin/add_category', ({
@@ -60,6 +62,15 @@ router.post('/add-category', function (req, res) {
 
                 category.save(function (err) {
                     if (err) return console.log(err);
+
+                    Category.find(function (err, categories) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            req.app.locals.categories = categories;
+                        }
+                    });
+
                     req.flash('success', 'Category added');
                     res.redirect('/admin/categories');
                 })
@@ -71,7 +82,7 @@ router.post('/add-category', function (req, res) {
 /*
  * GET edit category
  */
-router.get('/edit-category/:id', function (req, res) {
+router.get('/edit-category/:id', isAdmin, function (req, res) {
 
     Category.findById(req.params.id, function (err, category) {
         if (err) return console.log(err);
@@ -123,6 +134,14 @@ router.post('/edit-category/:id', function (req, res) {
                         if (err)
                             return console.log(err);
 
+                        Category.find(function (err, categories) {
+                            if (err) {
+                                console.log(err);
+                            } else {
+                                req.app.locals.categories = categories;
+                            }
+                        });
+
                         req.flash('success', 'Category edited');
                         res.redirect('/admin/categories/edit-category/'+ id );
                     });
@@ -137,9 +156,17 @@ router.post('/edit-category/:id', function (req, res) {
 /*
  * GET delete category
  */
-router.get('/delete-category/:id', function (req, res) {
+router.get('/delete-category/:id', isAdmin, function (req, res) {
     Category.findByIdAndRemove(req.params.id, function (err) {
         if (err) return console.log(err);
+
+        Category.find(function (err, categories) {
+            if (err) {
+                console.log(err);
+            } else {
+                req.app.locals.categories = categories;
+            }
+        });
 
         req.flash('success', 'Category deleted');
         res.redirect('/admin/categories/');
