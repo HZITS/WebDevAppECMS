@@ -1,10 +1,10 @@
-var express = require('express');
-var router = express.Router();
-var passport = require('passport');
-var bcrypt = require('bcryptjs');
+const express = require('express');
+const router = express.Router();
+const passport = require('passport');
+const bcrypt = require('bcryptjs');
 
 // Get Users model
-var User = require('../models/user');
+const User = require('../models/user');
 
 /*
  * GET register
@@ -22,11 +22,11 @@ router.get('/register', function (req, res) {
  */
 router.post('/register', function (req, res) {
 
-  var name = req.body.name;
-  var email = req.body.email;
-  var username = req.body.username;
-  var password = req.body.password;
-  var password2 = req.body.password2;
+  let name = req.body.name;
+  let email = req.body.email;
+  let username = req.body.username;
+  let password = req.body.password;
+  let password2 = req.body.password2;
 
   req.checkBody('name', 'Name is required!').notEmpty();
   req.checkBody('email', 'Email is required!').isEmail();
@@ -34,7 +34,7 @@ router.post('/register', function (req, res) {
   req.checkBody('password', 'Password is required!').notEmpty();
   req.checkBody('password2', 'Passwords do not match!').equals(password);
 
-  var errors = req.validationErrors();
+  let errors = req.validationErrors();
 
   if (errors) {
     res.render('register', {
@@ -51,7 +51,7 @@ router.post('/register', function (req, res) {
         req.flash('danger', 'Username exists, choose another!');
         res.redirect('/users/register');
       } else {
-        var user = new User({
+        let user = new User({
           name: name,
           email: email,
           username: username,

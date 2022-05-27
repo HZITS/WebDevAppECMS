@@ -1,22 +1,40 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var mongoose = require('mongoose');
-var bodyParser = require('body-parser');
-var session = require('express-session');
-var expressValidator = require('express-validator');
-var messages = require('express-messages');
-var fileUpload = require('express-fileupload');
-var passport = require('passport');
+let createError = require('http-errors');
+let express = require('express');
+let path = require('path');
+let mongoose = require('mongoose');
+let bodyParser = require('body-parser');
+let session = require('express-session');
+let expressValidator = require('express-validator');
+let fileUpload = require('express-fileupload');
+let passport = require('passport');
+let swaggerJsDoc = require('swagger-jsdoc');
+let swaggerUi = require('swagger-ui-express');
 
-var config = require('./config/database.js');
-// var port = 4000;
+//24.05.22
+require('dotenv').config();
 
 // init app
-var app = express();
+let app = express();
 
+app.use(bodyParser.urlencoded({extended: true}));
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+// express-session middleware
+app.use(session({
+  secret: 'keyboard cat',
+  resave: true,
+  saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+// set a public folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+let config = require('./config/database.js');
 // connect to db
 mongoose.Promise = global.Promise;
 mongoose.connect(config.database).then(() => {
@@ -26,17 +44,24 @@ mongoose.connect(config.database).then(() => {
   process.exit();
 });
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+// swagger setup
+let swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      title: "ECMS API",
+      description: "ECMS API Info",
+      contact: {
+        name: "HZITS"
+      },
+      servers: ["https://localhost:8000"]
+    }
+  },
+  apis: ["./routes/admin_categories.js", "./routes/admin_pages.js", "./routes/admin_products.js", "./routes/cart.js", "./routes/pages.js", "./routes/products.js", "./routes/users.js"]
+}
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+let swaggerDocs = swaggerJsDoc(swaggerOptions);
 
-// set a public folder
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // set global errors variable
 app.locals.errors = null;
@@ -44,7 +69,7 @@ app.locals.errors = null;
 //
 // Get Page Model
 //
-var Page = require('./models/page');
+let Page = require('./models/page');
 
 // Get all pages to pass to header.ejs
 Page.find({}).sort({sorting: 1}).exec(function (err, pages) {
@@ -58,8 +83,7 @@ Page.find({}).sort({sorting: 1}).exec(function (err, pages) {
 //
 // Get Category Model
 //
-var Category = require('./models/category');
-
+let Category = require('./models/category');
 
 // Get all categories to pass to header.ejs
 Category.find(function (err, categories) {
@@ -75,25 +99,10 @@ Category.find(function (err, categories) {
 //
 app.use(fileUpload());
 
-//
-// body parser middleware
-//
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
-// parse application/json
-app.use(bodyParser.json())
-
-// express-session middleware
-app.use(session({
-  secret: 'keyboard cat',
-  resave: true,
-  saveUninitialized: true,
-}));
-
 //express-validator middleware
 app.use(expressValidator({
   errorFormatter: function (param, msg, value) {
-    var namespace = param.split('.')
+    let namespace = param.split('.')
         , root = namespace.shift()
         , formParam = root;
     while (namespace.length) {
@@ -131,13 +140,12 @@ app.use(function (req, res, next) {
   next();
 });
 
-// passport config
+// Passport Config
 require('./config/passport')(passport);
 // Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
-// cart get
 app.get('*', function(req,res,next) {
   res.locals.cart = req.session.cart;
   res.locals.user = req.user || null;
@@ -145,13 +153,13 @@ app.get('*', function(req,res,next) {
 });
 
 // setting routes
-var pages = require('./routes/pages.js');
-var products = require('./routes/products.js');
-var cart = require('./routes/cart.js');
-var users = require('./routes/users.js');
-var adminPages = require('./routes/admin_pages.js');
-var adminCategories = require('./routes/admin_categories.js');
-var adminProducts = require('./routes/admin_products.js');
+let pages = require('./routes/pages.js');
+let products = require('./routes/products.js');
+let cart = require('./routes/cart.js');
+let users = require('./routes/users.js');
+let adminPages = require('./routes/admin_pages.js');
+let adminCategories = require('./routes/admin_categories.js');
+let adminProducts = require('./routes/admin_products.js');
 
 app.use('/admin/pages', adminPages);
 app.use('/admin/categories', adminCategories);
@@ -161,10 +169,21 @@ app.use('/cart', cart);
 app.use('/users', users);
 app.use('/', pages);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+// // catch 404 and forward to error handler
+// app.use(function(req, res, next) {
+//   next(createError(404));
+// });
+
+// OAuth 2.0
+app.get("/auth/google",
+    passport.authenticate('google',{ scope: ["profile"] })
+);
+app.get('/auth/google/ecms',
+    passport.authenticate('google', { failureRedirect: './login' }),
+    function(req, res) {
+      // Successful authentication, redirect home.
+      res.redirect('/');  
+    });
 
 let port = process.env.PORT;
 if (port == null || port == "") {
@@ -174,18 +193,6 @@ if (port == null || port == "") {
 // start the server
 app.listen(port, function (){
   console.log('Server started on port ' + port);
-});
-
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
 });
 
 module.exports = app;
